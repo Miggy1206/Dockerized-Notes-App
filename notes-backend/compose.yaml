@@ -1,7 +1,7 @@
 name: notes-backend
 
 services:
-  notebooks:
+  notes:
     build:
       context: .
       dockerfile: Dockerfile
