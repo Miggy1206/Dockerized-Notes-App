@@ -2,6 +2,25 @@ const express = require('express');
 const notebookRouter = express.Router();
 const { Notebook } = require('./models');
 const mongoose = require('mongoose');
+
+
+
+const validateId = ( req, res, next) => {
+    const { id } = req.params;
+    if(!mongoose.Types.ObjectId.isValid(id)){
+        return res.status(404).json({ error: 'Notebook not found'});
+    }
+
+    next();
+}
+
+
+
+
+
+
+
+
 // Create new notebooks: POST '/'
 notebookRouter.post('/', async (req, res) => {
     try {
@@ -32,13 +51,9 @@ notebookRouter.get('/', async (req, res) => {
 
 
 //Retrieve a single notebook: GET '/:id'
-notebookRouter.get('/:id', async (req, res) => {
-    try{
-        const { id } = req.params;
-        if(!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(404).json({ error: 'Notebook not found'});
-        }
-        const notebook = await Notebook.findById(id);
+notebookRouter.get('/:id', validateId, async (req, res) => {
+    try{  
+        const notebook = await Notebook.findById(req.params.id);
         if(!notebook){
             return res.status(404).json({ error: 'Notebook not found'});
         }
@@ -49,14 +64,10 @@ notebookRouter.get('/:id', async (req, res) => {
     }
 });
 //Update a single notebook: PUT '/:id'
-notebookRouter.put('/:id', async (req, res) => {
+notebookRouter.put('/:id', validateId, async (req, res) => {
     try{
         const { name, description} = req.body;
-        const { id } = req.params;
-        if(!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(404).json({ error: 'Notebook not found'});
-        }
-        const notebook = await Notebook.findByIdAndUpdate(id, {name, description}, {new: true});
+        const notebook = await Notebook.findByIdAndUpdate(req.params.id, {name, description}, {new: true});
         if(!notebook){
             return res.status(404).json({ error: 'Notebook not found'});
         }
@@ -67,17 +78,13 @@ notebookRouter.put('/:id', async (req, res) => {
     }
 });
 //Delete a single notebook: DELETE '/:id'
-notebookRouter.delete('/:id', async (req, res) => {
+notebookRouter.delete('/:id', validateId, async (req, res) => {
     try{
-        const { id } = req.params;
-        if(!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(404).json({ error: 'Notebook not found'});
-        }
-        const notebook = await Notebook.findByIdAndDelete(id);
+        const notebook = await Notebook.findByIdAndDelete(req.params,id);
         if(!notebook){
             return res.status(404).json({ error: 'Notebook not found'});
         }
-        return res.json({data: notebook});
+        return res.sendStatus(204);
 
     }catch(err){
         res.status(500).json({error:err.message});
